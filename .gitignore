@@ -1,0 +1,25 @@
+# Binary
+/tenthman
+
+# Output
+output/
+
+# Logs
+*.log
+
+# Environment
+.env
+
+# Claude
+CLAUDE.md
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
