@@ -52,6 +52,7 @@ func runDebate(cmd *cobra.Command, args []string) error {
 
 	// Create OpenRouter client
 	client := openrouter.NewClient(apiKey)
+	client.SetMaxTokens(500)
 
 	// Fetch live models, fallback to defaults
 	allModels, err := client.ListModels(ctx)
@@ -97,7 +98,7 @@ func runDebate(cmd *cobra.Command, args []string) error {
 	}
 
 	// Run debate
-	fmt.Printf("Debate: %s\n", topic)
+	fmt.Printf("%s %s\n", output.Bold("Debate:"), output.Colorize(output.AnsiMagenta, topic))
 	fmt.Printf("Agents: %d | Rounds: %d-%d | Output: %s\n\n", agentCount, minRounds, maxRounds, outDir)
 
 	writer := output.NewWriter(outDir)

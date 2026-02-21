@@ -2,7 +2,7 @@
 /tenthman
 
 # Output
-output/
+/output/
 
 # Logs
 *.log
