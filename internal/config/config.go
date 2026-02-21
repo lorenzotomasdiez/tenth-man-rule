@@ -1,9 +1,11 @@
 package config
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type Config struct {
@@ -57,6 +59,35 @@ func Load() (*Config, error) {
 		MinRounds:  minRounds,
 		MaxRounds:  maxRounds,
 	}, nil
+}
+
+func LoadDotEnv(path string) error {
+	f, err := os.Open(path)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("config: opening .env: %w", err)
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		key, val, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		val = strings.TrimSpace(val)
+		if os.Getenv(key) == "" {
+			os.Setenv(key, val)
+		}
+	}
+	return scanner.Err()
 }
 
 func envInt(key string, defaultVal int) (int, error) {

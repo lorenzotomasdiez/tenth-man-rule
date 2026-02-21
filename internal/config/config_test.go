@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -123,5 +124,57 @@ func TestLoad_InvalidAgentCount(t *testing.T) {
 	_, err := Load()
 	if err == nil {
 		t.Fatal("expected error for non-numeric TENTHMAN_AGENTS")
+	}
+}
+
+func TestLoadDotEnv_SetsVarsFromFile(t *testing.T) {
+	clearEnv(t)
+	dir := t.TempDir()
+	envFile := filepath.Join(dir, ".env")
+	os.WriteFile(envFile, []byte("OPENROUTER_API_KEY=from-dotenv\nTENTHMAN_OUTPUT_DIR=dotenv-output\n"), 0644)
+
+	err := LoadDotEnv(envFile)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.APIKey != "from-dotenv" {
+		t.Errorf("APIKey = %q, want %q", cfg.APIKey, "from-dotenv")
+	}
+	if cfg.OutputDir != "dotenv-output" {
+		t.Errorf("OutputDir = %q, want %q", cfg.OutputDir, "dotenv-output")
+	}
+}
+
+func TestLoadDotEnv_EnvVarsTakePrecedence(t *testing.T) {
+	clearEnv(t)
+	t.Setenv("OPENROUTER_API_KEY", "from-env")
+
+	dir := t.TempDir()
+	envFile := filepath.Join(dir, ".env")
+	os.WriteFile(envFile, []byte("OPENROUTER_API_KEY=from-dotenv\n"), 0644)
+
+	err := LoadDotEnv(envFile)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.APIKey != "from-env" {
+		t.Errorf("APIKey = %q, want %q (env var should take precedence)", cfg.APIKey, "from-env")
+	}
+}
+
+func TestLoadDotEnv_MissingFileIsNotError(t *testing.T) {
+	err := LoadDotEnv("/nonexistent/.env")
+	if err != nil {
+		t.Fatalf("missing .env file should not be an error, got: %v", err)
 	}
 }
